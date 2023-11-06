@@ -45,8 +45,27 @@
 	"type": "module",
 	"dependencies": {
 		"@tiptap/core": "^2.1.12",
+		"@tiptap/extension-bubble-menu": "^2.1.12",
+		"@tiptap/extension-color": "^2.1.12",
+		"@tiptap/extension-highlight": "^2.1.12",
+		"@tiptap/extension-horizontal-rule": "^2.1.12",
+		"@tiptap/extension-image": "^2.1.12",
+		"@tiptap/extension-link": "^2.1.12",
+		"@tiptap/extension-placeholder": "^2.1.12",
+		"@tiptap/extension-task-item": "^2.1.12",
+		"@tiptap/extension-task-list": "^2.1.12",
+		"@tiptap/extension-text-style": "^2.1.12",
+		"@tiptap/extension-underline": "^2.1.12",
+		"@tiptap/pm": "^2.1.12",
 		"@tiptap/starter-kit": "^2.1.12",
+		"@tiptap/suggestion": "^2.1.12",
+		"ai": "^2.2.20",
+		"clsx": "^2.0.0",
 		"lucide-svelte": "^0.292.0",
-		"pocketbase": "^0.19.0"
+		"pocketbase": "^0.19.0",
+		"svelte-moveable": "^0.44.0",
+		"tailwind-merge": "^2.0.0",
+		"tippy.js": "^6.3.7",
+		"tiptap-markdown": "^0.8.4"
 	}
 }
