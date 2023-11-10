@@ -6,18 +6,21 @@
 
 	import { getPrevText } from '$lib/editor.js';
 	import { createLocalStorageStore } from '$lib/stores/localStorage.js';
-	import { createDebouncedCallback, noop } from '$lib/utils.js';
+	import { createDebouncedCallback, noop, subscribePostIdStore } from '$lib/utils.js';
 	import { Editor, Extension, type JSONContent } from '@tiptap/core';
+	import type { EditorState } from '@tiptap/pm/state';
 	import type { EditorProps } from '@tiptap/pm/view';
+	import type { Node } from '@tiptap/pm/model';
 	import { useCompletion } from 'ai/svelte';
 	import ImageResizer from './extensions/ImageResizer.svelte';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { defaultEditorContent } from './default-content.js';
 	import { defaultExtensions } from './extensions/index.js';
 	import { defaultEditorProps } from './props.js';
 	import Toasts, { addToast } from '../toasts.svelte';
 
 	import EditorBubbleMenu from './bubble-menu/index.svelte';
+	import { pocketbase } from '$lib/pocketbase';
 
 	/**
 	 * The API route to use for the OpenAI completion API.
@@ -69,6 +72,9 @@
 
 	let element: Element;
 	let editor: Editor;
+	let previousState: EditorState; // Store the previous state
+	let deletionQueue: { title: string; timestamp: number }[] = [];
+	const deletionDelay = 60000; // 1 minute delay
 
 	const { complete, completion, isLoading, stop } = useCompletion({
 		id: 'novel',
@@ -119,6 +125,53 @@
 		onDebouncedUpdate(editor);
 	}, debounceDuration);
 
+	// Function to handle node deletion
+	function onNodeDeleted(node: Node) {
+		// Remove the image URL from your database
+		deletionQueue.push({ title: node.attrs.title, timestamp: Date.now() });
+	}
+
+	const intervalId = setInterval(() => {
+		// Get the postId from the store
+		const postId = subscribePostIdStore();
+
+		const now = Date.now();
+		deletionQueue = deletionQueue.filter(async (item) => {
+			if (now - item.timestamp > deletionDelay) {
+				// Delete the image from the database
+				try {
+					await pocketbase.collection('posts').update(postId, {
+						'files-': [item.title]
+					});
+				} catch (e) {
+					console.log(e);
+				}
+
+				return false;
+			}
+			return true;
+		});
+	}, 5000);
+
+	// Function to check for node deletions
+	function checkForNodeDeletions() {
+		const prevNodesById: Record<string, Node> = {};
+		previousState?.doc.forEach((node: Node) => {
+			if (node.attrs.src) prevNodesById[node.attrs.src] = node;
+		});
+
+		const nodesById: Record<string, Node> = {};
+		editor.state.doc.forEach((node: Node) => {
+			if (node.attrs.src) nodesById[node.attrs.src] = node;
+		});
+
+		previousState = editor.state;
+
+		for (const [src, node] of Object.entries(prevNodesById)) {
+			if (!(src in nodesById)) onNodeDeleted(node);
+		}
+	}
+
 	onMount(() => {
 		editor = new Editor({
 			element: element,
@@ -152,11 +205,19 @@
 					onUpdate(e.editor);
 					debouncedUpdates(e);
 				}
+
+				// Handel Image Deletions from db
+				checkForNodeDeletions();
 			},
+
 			autofocus: 'end'
 		});
 
 		return () => editor.destroy();
+	});
+
+	onDestroy(() => {
+		clearInterval(intervalId); // Clear interval when the component is destroyed
 	});
 </script>
 

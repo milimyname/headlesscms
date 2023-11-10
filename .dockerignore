@@ -1,0 +1,16 @@
+# flyctl launch added from .gitignore
+**/.DS_Store
+**/node_modules
+build
+.svelte-kit
+package
+**/.env
+**/.env.*
+!**/.env.example
+**/vite.config.js.timestamp-*
+**/vite.config.ts.timestamp-*
+**/.vercel
+
+# flyctl launch added from node_modules/.pnpm/tailwindcss@3.3.3/node_modules/tailwindcss/stubs/.gitignore
+!node_modules/.pnpm/tailwindcss@3.3.3/node_modules/tailwindcss/stubs/**/*
+fly.toml

@@ -1,8 +1,8 @@
-// import { BlobResult } from "@vercel/blob";
-// import { toast } from "sonner";
+import { pocketbase } from '$lib/pocketbase';
 import { addToast } from '$lib/ui/toasts.svelte';
 import { EditorState, Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet, EditorView } from '@tiptap/pm/view';
+import { subscribePostIdStore } from '$lib/utils';
 
 const uploadKey = new PluginKey('upload-image');
 
@@ -53,7 +53,7 @@ function findPlaceholder(state: EditorState, id: any) {
 	return found.length ? found[0].from : null;
 }
 
-export function startImageUpload(file: File, view: EditorView, pos: number) {
+export async function startImageUpload(file: File, view: EditorView, pos: number) {
 	// check if the file is an image
 	if (!file.type.includes('image/')) {
 		addToast({
@@ -96,72 +96,65 @@ export function startImageUpload(file: File, view: EditorView, pos: number) {
 		view.dispatch(tr);
 	};
 
-	handleImageUpload(file).then((src) => {
-		const { schema } = view.state;
+	const src = await handleImageUpload(file);
 
-		const pos = findPlaceholder(view.state, id);
-		// If the content around the placeholder has been deleted, drop
-		// the image
-		if (pos == null) return;
+	const imageUrl = src?.src;
+	const imageTitle = src?.title;
 
-		// Otherwise, insert it at the placeholder's position, and remove
-		// the placeholder
+	const { schema } = view.state;
 
-		// When BLOB_READ_WRITE_TOKEN is not valid or unavailable, read
-		// the image locally
-		const imageSrc = typeof src === 'object' ? reader.result : src;
+	const newPos = findPlaceholder(view.state, id);
+	// If the content around the placeholder has been deleted, drop
+	// the image
+	if (newPos == null) return;
 
-		const node = schema.nodes.image.create({ src: imageSrc });
-		const transaction = view.state.tr
-			.replaceWith(pos, pos, node)
-			.setMeta(uploadKey, { remove: { id } });
-		view.dispatch(transaction);
-	});
+	// Otherwise, insert it at the placeholder's position, and remove
+	// the placeholder
+
+	// When BLOB_READ_WRITE_TOKEN is not valid or unavailable, read
+	// the image locally
+	const imageSrc = typeof imageUrl === 'object' ? reader.result : imageUrl;
+
+	const node = schema.nodes.image.create({ src: imageSrc, title: imageTitle });
+	const transaction = view.state.tr
+		.replaceWith(pos, pos, node)
+		.setMeta(uploadKey, { remove: { id } });
+	view.dispatch(transaction);
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Example function to upload an image to PocketBase
 export const handleImageUpload = async (file: File) => {
-	await sleep(1000);
-	return file;
-	// upload to Vercel Blob
-	// return new Promise((resolve) => {
-	// 	// toast.promise(
-	// 	//   fetch("/api/upload", {
-	// 	//     method: "POST",
-	// 	//     headers: {
-	// 	//       "content-type": file?.type || "application/octet-stream",
-	// 	//       "x-vercel-filename": file?.name || "image.png",
-	// 	//     },
-	// 	//     body: file,
-	// 	//   }).then(async (res) => {
-	// 	//     // Successfully uploaded image
-	// 	//     if (res.status === 200) {
-	// 	//       const { url } = (await res.json()) as BlobResult;
-	// 	//       // preload the image
-	// 	//       let image = new Image();
-	// 	//       image.src = url;
-	// 	//       image.onload = () => {
-	// 	//         resolve(url);
-	// 	//       };
-	// 	//       // No blob store configured
-	// 	//     } else if (res.status === 401) {
-	// 	//       resolve(file);
+	try {
+		// Create a new FormData object
+		const formData = new FormData();
+		// Append the file with the key 'file', the key might need to be adjusted based on your collection's field
+		formData.append('files', file);
 
-	// 	//       throw new Error(
-	// 	//         "`BLOB_READ_WRITE_TOKEN` environment variable not found, reading image locally instead."
-	// 	//       );
-	// 	//       // Unknown error
-	// 	//     } else {
-	// 	//       throw new Error(`Error uploading image. Please try again.`);
-	// 	//     }
-	// 	//   }),
-	// 	//   {
-	// 	//     loading: "Uploading image...",
-	// 	//     success: "Image uploaded successfully.",
-	// 	//     error: (e) => e.message,
-	// 	//   }
-	// 	// );
-	// 	resolve(file);
-	// });
+		const postId = subscribePostIdStore();
+
+		// PocketBase collection name should be replaced with the actual name of the collection you're uploading to
+		const createdRecord = await pocketbase.collection('posts').update(postId, formData);
+
+		const filename = createdRecord.files.at(-1);
+		// Assuming the API returns the full URL or the relative path to access the image
+		// Adjust the following line to use the actual property where the image URL is stored
+		const imageUrl = pocketbase.files.getUrl(createdRecord, filename);
+
+		// Return the URL to the uploaded image
+		return {
+			src: imageUrl,
+			title: filename
+		};
+	} catch (error) {
+		addToast({
+			data: {
+				text: error.message,
+				type: 'error'
+			}
+		});
+		// Handle the error case by returning null or another appropriate value
+		return null;
+	}
 };

@@ -11,6 +11,7 @@
 		ListOrdered,
 		TextIcon,
 		Code,
+		Image,
 		CheckSquare
 	} from 'lucide-svelte';
 
@@ -76,6 +77,16 @@
 			icon: Code,
 			command: () => editor.chain().focus().toggleCodeBlock().run(),
 			isActive: editor.isActive('codeBlock')
+		},
+		{
+			name: 'Image',
+			icon: Image,
+			command: () => {
+				// Example command to insert a placeholder image
+				const url = prompt('Enter the image URL');
+				if (url) editor.chain().focus().setImage({ src: url }).run();
+			},
+			isActive: editor.isActive('image') // This checks if an image node is selected or active
 		}
 	];
 

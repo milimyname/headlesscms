@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  external:
+    container_name: headlesscms-bun-sveltekit
+    # The name of the image that will be created when building this container
+    build: .
+    ports:
+      - 3000:3000

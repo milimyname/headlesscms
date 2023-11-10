@@ -1,5 +1,16 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { postIdStore } from './stores/custom';
+
+export const subscribePostIdStore = () => {
+	let storeValue = '';
+
+	postIdStore.subscribe((value) => {
+		storeValue = value;
+	});
+
+	return storeValue;
+};
 
 export const noop = () => {
 	// do nothing

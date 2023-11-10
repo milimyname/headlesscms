@@ -10,20 +10,18 @@ import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import { Markdown } from 'tiptap-markdown';
 import Highlight from '@tiptap/extension-highlight';
-// import SlashCommand from "./slash-command";
 import { InputRule } from '@tiptap/core';
 import SlashCommand from './slash-command.js';
 import UpdatedImage from './update-image.js';
 import UploadImagesPlugin from '../plugins/upload-image.js';
-import BubbleMenu from '@tiptap/extension-bubble-menu';
-import {
-	isColorSelectorOpen,
-	isLinkSelectorOpen,
-	isNodeSelectorOpen
-} from '../bubble-menu/index.svelte';
-import { isBrowser } from '$lib/utils.js';
-// import UploadImagesPlugin from "@/ui/editor/plugins/upload-images";
-// import UpdatedImage from "./updated-image";
+import DragAndDrop from './drag-drop.js';
+// import BubbleMenu from '@tiptap/extension-bubble-menu';
+// import {
+// 	isColorSelectorOpen,
+// 	isLinkSelectorOpen,
+// 	isNodeSelectorOpen
+// } from '../bubble-menu/index.svelte';
+// import { isBrowser } from '$lib/utils.js';
 
 export const defaultExtensions = [
 	StarterKit.configure({
@@ -142,5 +140,6 @@ export const defaultExtensions = [
 	Markdown.configure({
 		html: false,
 		transformCopiedText: true
-	})
+	}),
+	DragAndDrop
 ];

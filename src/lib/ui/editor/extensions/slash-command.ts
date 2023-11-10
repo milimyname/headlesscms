@@ -12,13 +12,14 @@ import {
 	List,
 	ListOrdered,
 	MessageSquarePlus,
+	Image,
 	Text,
 	TextQuote
 } from 'lucide-svelte';
 import CommandList from './CommandList.svelte';
 // import { toast } from 'sonner';
 // import va from '@vercel/analytics';
-// import { startImageUpload } from '@/ui/editor/plugins/upload-images';
+import { startImageUpload } from '$lib/ui/editor/plugins/upload-image';
 import { Magic } from '$lib/ui/icons/index.js';
 import type { SvelteComponent } from 'svelte';
 
@@ -156,28 +157,28 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 			icon: Code,
 			command: ({ editor, range }: CommandProps) =>
 				editor.chain().focus().deleteRange(range).toggleCodeBlock().run()
+		},
+		{
+			title: 'Image',
+			description: 'Upload an image from your computer.',
+			searchTerms: ['photo', 'picture', 'media'],
+			icon: Image,
+			command: ({ editor, range }: CommandProps) => {
+				editor.chain().focus().deleteRange(range).run();
+				// upload image
+				const input = document.createElement('input');
+				input.type = 'file';
+				input.accept = 'image/*';
+				input.onchange = async () => {
+					if (input.files?.length) {
+						const file = input.files[0];
+						const pos = editor.view.state.selection.from;
+						startImageUpload(file, editor.view, pos);
+					}
+				};
+				input.click();
+			}
 		}
-		// {
-		// 	title: 'Image',
-		// 	description: 'Upload an image from your computer.',
-		// 	searchTerms: ['photo', 'picture', 'media'],
-		// 	// icon: <ImageIcon size={18} />,
-		// 	command: ({ editor, range }: CommandProps) => {
-		// 		editor.chain().focus().deleteRange(range).run();
-		// 		// upload image
-		// 		const input = document.createElement('input');
-		// 		input.type = 'file';
-		// 		input.accept = 'image/*';
-		// 		input.onchange = async () => {
-		// 			if (input.files?.length) {
-		// 				const file = input.files[0];
-		// 				const pos = editor.view.state.selection.from;
-		// 				// startImageUpload(file, editor.view, pos);
-		// 			}
-		// 		};
-		// 		input.click();
-		// 	}
-		// }
 	].filter((item) => {
 		if (typeof query === 'string' && query.length > 0) {
 			const search = query.toLowerCase();
