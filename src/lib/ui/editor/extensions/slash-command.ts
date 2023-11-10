@@ -164,6 +164,9 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 			searchTerms: ['photo', 'picture', 'media'],
 			icon: Image,
 			command: ({ editor, range }: CommandProps) => {
+				// Disable the editor
+				editor.setOptions({ editable: false });
+
 				editor.chain().focus().deleteRange(range).run();
 				// upload image
 				const input = document.createElement('input');
@@ -173,7 +176,17 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 					if (input.files?.length) {
 						const file = input.files[0];
 						const pos = editor.view.state.selection.from;
-						startImageUpload(file, editor.view, pos);
+
+						try {
+							// Start image upload
+							await startImageUpload(file, editor.view, pos);
+						} catch (error) {
+							// Handle upload error
+							console.error('Image upload failed', error);
+						} finally {
+							// Re-enable the editor and hide loading indicator
+							editor.setOptions({ editable: true });
+						}
 					}
 				};
 				input.click();
