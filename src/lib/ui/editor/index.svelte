@@ -8,7 +8,8 @@
 	import { createLocalStorageStore } from '$lib/stores/localStorage.js';
 	import { createDebouncedCallback, noop, subscribePostIdStore } from '$lib/utils.js';
 	import { Editor, Extension, type JSONContent } from '@tiptap/core';
-	import type { EditorState } from '@tiptap/pm/state';
+	import type { EditorState as EditorStateType } from '@tiptap/pm/state';
+	import { EditorState } from '@tiptap/pm/state';
 	import type { EditorProps } from '@tiptap/pm/view';
 	import type { Node } from '@tiptap/pm/model';
 	import { useCompletion } from 'ai/svelte';
@@ -72,7 +73,7 @@
 
 	let element: Element;
 	let editor: Editor;
-	let previousState: EditorState; // Store the previous state
+	let previousState: EditorStateType; // Store the previous state
 	let deletionQueue: { title: string; timestamp: number }[] = [];
 	const deletionDelay = 60000; // 1 minute delay
 
@@ -131,44 +132,67 @@
 		deletionQueue.push({ title: node.attrs.title, timestamp: Date.now() });
 	}
 
-	const intervalId = setInterval(() => {
+	const intervalSrc = setInterval(async () => {
 		// Get the postId from the store
 		const postId = subscribePostIdStore();
 
 		const now = Date.now();
-		deletionQueue = deletionQueue.filter(async (item) => {
+		let newQueue = [];
+
+		for (const item of deletionQueue) {
 			if (now - item.timestamp > deletionDelay) {
 				// Delete the image from the database
 				try {
 					await pocketbase.collection('posts').update(postId, {
 						'files-': [item.title]
 					});
+					resetEditorContent();
 				} catch (e) {
 					console.log(e);
 				}
-
-				return false;
 			}
-			return true;
+			// Keep the item in the queue if it's not time to delete yet
+			else newQueue.push(item);
+		}
+
+		deletionQueue = newQueue;
+	}, 1000);
+
+	function resetEditorContent() {
+		// Capture the current selection
+		const currentSelection = editor.state.selection;
+
+		// Reset the content
+		editor.commands.setContent(editor.getJSON());
+
+		// Create a new editor state while preserving the old selection
+		const newEditorState = EditorState.create({
+			doc: editor.state.doc,
+			plugins: editor.state.plugins,
+			selection: currentSelection
 		});
-	}, 5000);
+
+		// Update the editor state
+		editor.view.updateState(newEditorState);
+	}
 
 	// Function to check for node deletions
 	function checkForNodeDeletions() {
-		const prevNodesById: Record<string, Node> = {};
+		const prevNodesBySrc: Record<string, Node> = {};
 		previousState?.doc.forEach((node: Node) => {
-			if (node.attrs.src) prevNodesById[node.attrs.src] = node;
+			if (node.attrs.src) prevNodesBySrc[node.attrs.src] = node;
 		});
 
-		const nodesById: Record<string, Node> = {};
+		const nodesBySrc: Record<string, Node> = {};
 		editor.state.doc.forEach((node: Node) => {
-			if (node.attrs.src) nodesById[node.attrs.src] = node;
+			if (node.attrs.src) nodesBySrc[node.attrs.src] = node;
 		});
 
 		previousState = editor.state;
 
-		for (const [src, node] of Object.entries(prevNodesById)) {
-			if (!(src in nodesById)) onNodeDeleted(node);
+		for (const [src, node] of Object.entries(prevNodesBySrc)) {
+			if (!(src in nodesBySrc)) onNodeDeleted(node);
+			else deletionQueue = deletionQueue.filter((item) => item.title !== node.attrs.title);
 		}
 	}
 
@@ -217,7 +241,7 @@
 	});
 
 	onDestroy(() => {
-		clearInterval(intervalId); // Clear interval when the component is destroyed
+		clearInterval(intervalSrc); // Clear interval when the component is destroyed
 	});
 </script>
 
