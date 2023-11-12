@@ -15,6 +15,7 @@ import SlashCommand from './slash-command.js';
 import UpdatedImage from './update-image.js';
 import UploadImagesPlugin from '../plugins/upload-image.js';
 import DragAndDrop from './drag-drop.js';
+import Furigana from './furigana.js';
 // import BubbleMenu from '@tiptap/extension-bubble-menu';
 // import {
 // 	isColorSelectorOpen,
@@ -112,9 +113,10 @@ export const defaultExtensions = [
 	}),
 	Placeholder.configure({
 		placeholder: ({ node }: any) => {
-			if (node.type.name === 'heading') {
-				return `Heading ${node.attrs.level}`;
-			}
+			if (node.type.name === 'heading') return `Heading ${node.attrs.level}`;
+			// Return null or an empty string for the Furigana node
+			if (node.type.name === 'furigana') return null;
+
 			return "Press '/' for commands, or '++' for AI autocomplete...";
 		},
 		includeChildren: true
@@ -138,8 +140,9 @@ export const defaultExtensions = [
 		nested: true
 	}),
 	Markdown.configure({
-		html: false,
-		transformCopiedText: true
+		html: true,
+		transformCopiedText: false
 	}),
-	DragAndDrop
+	DragAndDrop,
+	Furigana
 ];

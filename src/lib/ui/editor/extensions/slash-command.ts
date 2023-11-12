@@ -164,15 +164,15 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 			searchTerms: ['photo', 'picture', 'media'],
 			icon: Image,
 			command: ({ editor, range }: CommandProps) => {
-				// Disable the editor
-				editor.setOptions({ editable: false });
-
 				editor.chain().focus().deleteRange(range).run();
 				// upload image
 				const input = document.createElement('input');
 				input.type = 'file';
 				input.accept = 'image/*';
 				input.onchange = async () => {
+					// Disable the editor
+					editor.setOptions({ editable: false });
+
 					if (input.files?.length) {
 						const file = input.files[0];
 						const pos = editor.view.state.selection.from;
@@ -187,8 +187,9 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 							// Re-enable the editor and hide loading indicator
 							editor.setOptions({ editable: true });
 						}
-					}
+					} else editor.setOptions({ editable: true });
 				};
+
 				input.click();
 			}
 		}

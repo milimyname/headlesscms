@@ -9,20 +9,30 @@
 	export let isNodeSelectorOpen = writable(false);
 	export let isColorSelectorOpen = writable(false);
 	export let isLinkSelectorOpen = writable(false);
+	export let isFuriganaSelecterOpen = writable(false);
 </script>
 
 <script lang="ts">
 	import { cn } from '$lib/utils.js';
 	import type { Editor } from '@tiptap/core';
-	import { BoldIcon, CodeIcon, ItalicIcon, StrikethroughIcon, UnderlineIcon } from 'lucide-svelte';
+	import {
+		BoldIcon,
+		CodeIcon,
+		ItalicIcon,
+		StrikethroughIcon,
+		UnderlineIcon,
+		BookA
+	} from 'lucide-svelte';
 	import { writable } from 'svelte/store';
 	import ColorSelector from './color-selector.svelte';
 	import LinkSelector from './link-selector.svelte';
 	import NodeSelector from './node-selector.svelte';
+	import FuriganaSelector from './furigana-selector.svelte';
 	import { BubbleMenuPlugin, type BubbleMenuPluginProps } from '@tiptap/extension-bubble-menu';
 	import { onDestroy, onMount } from 'svelte';
 
 	let element: HTMLElement;
+	let showFuriganaButton = true;
 
 	export let editor: Editor;
 	export let tippyOptions: BubbleMenuPluginProps['tippyOptions'] = {
@@ -31,6 +41,7 @@
 			isNodeSelectorOpen.set(false);
 			isColorSelectorOpen.set(false);
 			isLinkSelectorOpen.set(false);
+			isFuriganaSelecterOpen.set(false);
 		}
 	};
 	export let pluginKey: BubbleMenuPluginProps['pluginKey'] = 'SvelteTiptapBubbleMenu';
@@ -80,6 +91,7 @@
 		isNodeSelectorOpen.set(false);
 		isColorSelectorOpen.set(false);
 		isLinkSelectorOpen.set(false);
+		isFuriganaSelecterOpen.set(false);
 	};
 
 	$: if (!$isNodeSelectorOpen) {
@@ -92,6 +104,16 @@
 
 	$: if (!$isLinkSelectorOpen) {
 		reset();
+	}
+
+	$: if (!$isFuriganaSelecterOpen) {
+		reset();
+	}
+
+	$: if (editor) {
+		const { from } = editor.state.selection;
+		const node = editor.state.doc.nodeAt(from);
+		showFuriganaButton = !node || node.type.name !== 'furigana';
 	}
 
 	if (!editor) {
@@ -122,6 +144,9 @@
 >
 	<NodeSelector {editor} bind:isOpen={$isNodeSelectorOpen} />
 	<LinkSelector {editor} bind:isOpen={$isLinkSelectorOpen} />
+	{#if showFuriganaButton}
+		<FuriganaSelector {editor} bind:isOpen={$isFuriganaSelecterOpen} />
+	{/if}
 	<div class="flex">
 		{#each items as item, index (index)}
 			<button
