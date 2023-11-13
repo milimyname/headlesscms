@@ -22,6 +22,7 @@
 
 	import EditorBubbleMenu from './bubble-menu/index.svelte';
 	import { pocketbase } from '$lib/pocketbase';
+	import { postContentStore, postIdStore } from '$lib/stores/custom';
 
 	/**
 	 * The API route to use for the OpenAI completion API.
@@ -105,6 +106,8 @@
 		editor.commands.setContent($content);
 		hydrated = true;
 	}
+
+	$: if (editor && hydrated) editor.commands.setContent($postContentStore);
 
 	let prev = '';
 
