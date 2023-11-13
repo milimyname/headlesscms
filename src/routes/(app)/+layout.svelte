@@ -22,50 +22,53 @@
 </script>
 
 <div class="flex h-auto">
-	<div class=" {!$page.url.pathname.includes('post') && 'h-screen'}">
-		<aside
-			style={`transform: translateX(-${$twenedTransformX}rem); width: ${
-				$twenedTransformX > 10 ? '0' : '15rem'
-			}rem`}
-			class=" h-full rounded-e-2xl bg-slate-200 px-5 py-20"
-		>
-			<ul class="sticky top-10 flex flex-col gap-2">
-				{#each data.posts as post, i}
-					<li>
-						<button
-							on:click={() => {
-								$postContentStore = post.content;
-								goto(`/post/${post.id}`);
-							}}
-						>
-							{i + 1}. {post.title}
-						</button>
-					</li>
-				{/each}
-			</ul>
-		</aside>
-		{#if !isAsideOpen}
-			<button
-				style={`transform: translateX(${-$twenedTransformX + 15}rem)`}
-				class="fixed left-2 top-1/2 z-50"
-				on:click={() => (isAsideOpen = true)}
+	{#if isAsideOpen}
+		<div class=" {!$page.url.pathname.includes('post') && 'h-screen'}">
+			<aside
+				style={`transform: translateX(-${$twenedTransformX}rem); width: ${
+					$twenedTransformX > 10 ? '0' : '15rem'
+				}rem`}
+				class=" h-full rounded-e-2xl bg-slate-200 px-5 py-20"
 			>
-				<ChevronRight class="text-gray-500 transition-colors hover:text-black" />
-			</button>
-		{:else}
-			<button
-				style={`transform: translateX(${-$twenedTransformX + 15}rem)`}
-				class="fixed left-2 top-1/2 z-50"
-				on:click={() => (isAsideOpen = false)}
-			>
-				<Minus
-					class="translate-x-[0rem] rotate-90 text-gray-500 transition-colors hover:text-black"
-				/>
-			</button>
-		{/if}
-	</div>
+				<ul class="sticky top-10 flex flex-col gap-2">
+					{#each data.posts as post, i}
+						<li>
+							<button
+								on:click={() => {
+									$postContentStore = post.content;
+									goto(`/post/${post.id}`);
+								}}
+							>
+								{i + 1}. {post.title}
+							</button>
+						</li>
+					{/each}
+				</ul>
+			</aside>
+		</div>
+	{/if}
 
-	<div class=" w-full flex-1">
+	{#if !isAsideOpen}
+		<button
+			style={`transform: translateX(${-$twenedTransformX + 15}rem)`}
+			class="fixed left-2 top-1/2 z-50"
+			on:click={() => (isAsideOpen = true)}
+		>
+			<ChevronRight class="text-gray-500 transition-colors hover:text-black" />
+		</button>
+	{:else}
+		<button
+			style={`transform: translateX(${-$twenedTransformX + 15}rem)`}
+			class="fixed left-2 top-1/2 z-50"
+			on:click={() => (isAsideOpen = false)}
+		>
+			<Minus
+				class="translate-x-[0rem] rotate-90 text-gray-500 transition-colors hover:text-black"
+			/>
+		</button>
+	{/if}
+
+	<div class=" w-full flex-1 px-10">
 		<Nav />
 		<slot />
 	</div>

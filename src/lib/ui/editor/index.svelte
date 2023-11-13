@@ -23,6 +23,7 @@
 	import EditorBubbleMenu from './bubble-menu/index.svelte';
 	import { pocketbase } from '$lib/pocketbase';
 	import { postContentStore, postIdStore } from '$lib/stores/custom';
+	import { page } from '$app/stores';
 
 	/**
 	 * The API route to use for the OpenAI completion API.
@@ -107,7 +108,8 @@
 		hydrated = true;
 	}
 
-	$: if (editor && hydrated) editor.commands.setContent($postContentStore);
+	$: if (editor && hydrated && $postIdStore !== $page.url.pathname.split('/').pop())
+		editor.commands.setContent($postContentStore);
 
 	let prev = '';
 

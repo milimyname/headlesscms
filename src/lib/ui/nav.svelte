@@ -7,7 +7,7 @@
 
 <div
 	class="flex w-full justify-between border-t border-stone-200 bg-white
-	px-4 py-4 sm:bottom-[unset] sm:top-0 sm:border-none sm:bg-transparent"
+	py-4 sm:bottom-[unset] sm:top-0 sm:border-none sm:bg-transparent"
 >
 	{#if !$page.url.pathname.includes('post')}
 		<form action="?/createDefaultPost" method="POST" use:enhance>

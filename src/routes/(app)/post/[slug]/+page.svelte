@@ -14,7 +14,7 @@
 	$: $postIdStore = data.post.id;
 </script>
 
-<main class="flex justify-center sm:px-4 sm:pt-[15vh]">
+<main class="flex justify-center sm:pt-[15vh]">
 	<Editor
 		onUpdate={(e) => {
 			saveStatus = 'Unsaved';
