@@ -16,7 +16,8 @@
 		)
 			return;
 
-		event.preventDefault(); // Now we prevent default only for non-interactive elements
+		if ($heightSpring < 90) event.preventDefault();
+		else return;
 
 		const clientY = event.touches ? event.touches[0].clientY : event.clientY;
 		lastY = clientY;
@@ -40,9 +41,6 @@
 
 		lastY = clientY;
 		lastTime = now;
-
-		// log velocity to 2 decimal places
-		// console.log('Velocity: ' + Math.abs(velocity), deltaY);
 
 		const dragRatio = ((deltaY * 5) / window.innerHeight) * 100;
 		$heightSpring = Math.max(0, Math.min(98, $heightSpring - dragRatio));
@@ -104,8 +102,7 @@
 	on:touchstart={startDrag}
 	role="button"
 	tabindex="0"
-	class="fixed bottom-0 flex w-screen select-none items-center justify-center overflow-y-auto
-    rounded-t-[10px] bg-black text-white"
+	class="fixed bottom-0 flex w-screen select-none items-center justify-center overflow-y-auto rounded-t-[10px] bg-black text-white"
 >
 	<div class="mx-auto h-full max-w-md p-5">
 		<h2 class="mb-4 font-medium">Drawer for Svelte.</h2>
@@ -139,4 +136,10 @@
 			</p>
 		{/each}
 	</div>
+	<button
+		class="sticky right-4 top-4 h-8 w-8 self-start rounded-full bg-white font-bold text-black"
+		on:click={() => ($heightSpring = 0)}
+	>
+		X
+	</button>
 </div>
