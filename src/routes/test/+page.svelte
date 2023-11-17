@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { spring } from 'svelte/motion';
 
-	let height = spring(50, { stiffness: 0.1, damping: 0.5 });
-	let startPos = 0;
-	let fullHeight = 0;
+	let heightSpring = spring(50, { stiffness: 0.1, damping: 0.5 });
 	let lastY = 0;
 	let lastTime = 0;
 	let velocity = 0;
@@ -21,11 +19,8 @@
 		event.preventDefault(); // Now we prevent default only for non-interactive elements
 
 		const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-		startPos = clientY;
 		lastY = clientY;
 		lastTime = performance.now();
-		fullHeight = $height;
-
 		const moveEvent = event.touches ? 'touchmove' : 'mousemove';
 		const endEvent = event.touches ? 'touchend' : 'mouseup';
 
@@ -38,7 +33,6 @@
 	function handleMove(event) {
 		const clientY = event.touches ? event.touches[0].clientY : event.clientY;
 		const now = performance.now();
-		const dy = clientY - startPos;
 		const deltaY = clientY - lastY;
 		const deltaTime = now - lastTime;
 
@@ -48,10 +42,10 @@
 		lastTime = now;
 
 		// log velocity to 2 decimal places
-		// console.log('Velocity: ' + Math.round(velocity * 100) / 100);
+		// console.log('Velocity: ' + Math.abs(velocity), deltaY);
 
-		const dragRatio = (dy / window.innerHeight) * 100;
-		$height = Math.max(0, Math.min(100, fullHeight - dragRatio));
+		const dragRatio = ((deltaY * 5) / window.innerHeight) * 100;
+		$heightSpring = Math.max(0, Math.min(98, $heightSpring - dragRatio));
 	}
 
 	function endDrag() {
@@ -63,17 +57,14 @@
 		// Determine snap based on velocity
 		const snapThreshold = 1.5;
 
-		if (Math.abs(velocity) > snapThreshold) fullHeight = velocity > 0 ? 0 : 100;
+		if (Math.abs(velocity) > snapThreshold) $heightSpring = velocity > 0 ? 0 : 100;
 		else {
-			// Existing snap logic
-			if ($height >= 75) fullHeight = 95;
-			else if ($height < 75 && $height > 25) fullHeight = 50;
-			else fullHeight = 0;
+			if ($heightSpring >= 75) $heightSpring = 95;
+			else if ($heightSpring < 75 && $heightSpring > 25) $heightSpring = 50;
+			else $heightSpring = 0;
 		}
 
-		console.log({ velocity: Math.abs(velocity), snapThreshold, height: $height, fullHeight });
-
-		$height = fullHeight;
+		// console.log({ velocity: Math.abs(velocity), snapThreshold, $heightSpring });
 
 		drawerElement.classList.remove('touch-none');
 	}
@@ -98,15 +89,17 @@
 		};
 	}
 
-	$: if ($height === 0) drawerElement.scrollTop = 0;
+	$: if ($heightSpring === 0) drawerElement.scrollTop = 0;
 </script>
 
-<button class="ready" on:click={() => ($height = 50)}> Open Drawer </button>
+<button class="ready rounded-md bg-slate-300 p-4" on:click={() => ($heightSpring = 50)}>
+	Open Drawer
+</button>
 
 <div
 	bind:this={drawerElement}
-	style="height: {$height}vh; max-height: 98dvh; "
-	use:clickOutside={() => ($height = 0)}
+	style="height: {$heightSpring}dvh; max-height: 98dvh; "
+	use:clickOutside={() => ($heightSpring = 0)}
 	on:mousedown={startDrag}
 	on:touchstart={startDrag}
 	role="button"
