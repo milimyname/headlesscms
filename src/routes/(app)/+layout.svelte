@@ -119,6 +119,8 @@
 						<li>
 							<button
 								on:click={() => {
+									$heightSpring = 0;
+
 									$postContentStore = post.content;
 									goto(`/post/${post.id}`);
 								}}
@@ -145,7 +147,7 @@
 		<button
 			on:mousedown={startDrag}
 			on:touchstart={startDrag}
-			class="ready absolute bottom-2 left-1/2 z-50 -translate-x-1/2"
+			class="ready fixed bottom-2 left-1/2 z-50 -translate-x-1/2"
 			on:click={() => {
 				$heightSpring = 75;
 				isAsideOpen = true;

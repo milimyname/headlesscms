@@ -1,11 +1,7 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
-	import { afterNavigate } from '$app/navigation';
 	import { Editor } from '$lib/index.js';
 	import { pocketbase } from '$lib/pocketbase';
 	import { postIdStore } from '$lib/stores/custom';
-	import { createLocalStorageStore } from '$lib/stores/localStorage.js';
-	createLocalStorageStore;
 
 	export let data;
 
