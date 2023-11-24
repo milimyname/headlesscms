@@ -13,6 +13,7 @@ export const actions = {
 		const defaultPost = await locals.pb.collection('posts').create({
 			content: defaultEditorContent,
 			draft: true,
+			title: 'Untitled',
 			userId: locals.pb.authStore.model?.id
 		});
 
