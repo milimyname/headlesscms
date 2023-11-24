@@ -34,7 +34,7 @@
 		window.addEventListener(moveEvent, handleMove);
 		window.addEventListener(endEvent, endDrag);
 
-		drawerElement.classList.add('touch-none');
+		drawerElement?.classList.add('touch-none');
 	}
 
 	function handleMove(event) {
@@ -68,7 +68,7 @@
 			else $heightSpring = 0;
 		}
 
-		drawerElement.classList.remove('touch-none');
+		drawerElement?.classList.remove('touch-none');
 	}
 
 	// The clickOutside action
@@ -107,10 +107,10 @@
 			on:touchstart={startDrag}
 			role="button"
 			tabindex="0"
-			class="fixed bottom-0 flex w-full select-none items-center justify-center overflow-y-auto rounded-t-[10px] bg-slate-200"
+			class="fixed bottom-0 z-[2000] flex w-full select-none items-center justify-center overflow-y-auto rounded-t-[10px] bg-slate-200"
 		>
 			<div class=" h-full p-5">
-				<button class="sticky left-1/2 top-5 z-50 w-full" on:click={() => (isAsideOpen = false)}>
+				<button class="sticky left-1/2 top-5 z-50 w-full">
 					<div class="mx-auto h-2 w-[10vw] rounded-full bg-black" />
 				</button>
 
@@ -135,7 +135,9 @@
 				class="fixed bottom-4 right-4 z-10 h-8 w-8 self-start rounded-full bg-white font-bold text-black"
 				on:click={() => {
 					$heightSpring = 0;
-					isAsideOpen = false;
+					setTimeout(() => {
+						isAsideOpen = false;
+					}, 300);
 				}}
 			>
 				X
