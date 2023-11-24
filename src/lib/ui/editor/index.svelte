@@ -135,16 +135,18 @@
 	async function onNodeDeleted(node: Node) {
 		const postId = subscribePostIdStore();
 
+		const title = node.attrs.title;
+
 		// Delete the image from the database
 		try {
 			await pocketbase.collection('posts').update(postId, {
-				'files-': [node.attrs.title]
+				'files-': [title]
 			});
 		} catch (e) {
 			console.log(e);
 
 			await pocketbase.collection('posts').update(postId, {
-				'files-': [node.attrs.title]
+				'files-': [title]
 			});
 		}
 
