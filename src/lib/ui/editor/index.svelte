@@ -140,25 +140,22 @@
 			await pocketbase.collection('posts').update(postId, {
 				'files-': [node.attrs.title]
 			});
-
-			resetEditorContent();
-
-			addToast({
-				data: {
-					text: `Deleted image`,
-					type: 'success'
-				}
-			});
 		} catch (e) {
 			console.log(e);
 
-			addToast({
-				data: {
-					text: `Failed to delete image`,
-					type: 'error'
-				}
+			await pocketbase.collection('posts').update(postId, {
+				'files-': [node.attrs.title]
 			});
 		}
+
+		resetEditorContent();
+
+		addToast({
+			data: {
+				text: 'Image deleted.',
+				type: 'success'
+			}
+		});
 	}
 
 	function resetEditorContent() {
