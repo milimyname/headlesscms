@@ -77,7 +77,7 @@
 	let editor: Editor;
 	let previousState: EditorStateType; // Store the previous state
 	let deletionQueue: { title: string; timestamp: number }[] = [];
-	const deletionDelay = 60000; // 1 minute delay
+	const deletionDelay = 30000; // 1/2 minute delay
 
 	const { complete, completion, isLoading, stop } = useCompletion({
 		id: 'novel',
@@ -132,36 +132,34 @@
 	}, debounceDuration);
 
 	// Function to handle node deletion
-	function onNodeDeleted(node: Node) {
-		// Remove the image URL from your database
-		deletionQueue.push({ title: node.attrs.title, timestamp: Date.now() });
-	}
-
-	const intervalSrc = setInterval(async () => {
-		// Get the postId from the store
+	async function onNodeDeleted(node: Node) {
 		const postId = subscribePostIdStore();
 
-		const now = Date.now();
-		let newQueue = [];
+		// Delete the image from the database
+		try {
+			await pocketbase.collection('posts').update(postId, {
+				'files-': [node.attrs.title]
+			});
 
-		for (const item of deletionQueue) {
-			if (now - item.timestamp > deletionDelay) {
-				// Delete the image from the database
-				try {
-					await pocketbase.collection('posts').update(postId, {
-						'files-': [item.title]
-					});
-					resetEditorContent();
-				} catch (e) {
-					console.log(e);
+			resetEditorContent();
+
+			addToast({
+				data: {
+					text: `Deleted image`,
+					type: 'success'
 				}
-			}
-			// Keep the item in the queue if it's not time to delete yet
-			else newQueue.push(item);
-		}
+			});
+		} catch (e) {
+			console.log(e);
 
-		deletionQueue = newQueue;
-	}, 1000);
+			addToast({
+				data: {
+					text: `Failed to delete image`,
+					type: 'error'
+				}
+			});
+		}
+	}
 
 	function resetEditorContent() {
 		// Capture the current selection
@@ -195,10 +193,8 @@
 
 		previousState = editor.state;
 
-		for (const [src, node] of Object.entries(prevNodesBySrc)) {
+		for (const [src, node] of Object.entries(prevNodesBySrc))
 			if (!(src in nodesBySrc)) onNodeDeleted(node);
-			else deletionQueue = deletionQueue.filter((item) => item.title !== node.attrs.title);
-		}
 	}
 
 	onMount(() => {
@@ -243,10 +239,6 @@
 		});
 
 		return () => editor.destroy();
-	});
-
-	onDestroy(() => {
-		clearInterval(intervalSrc); // Clear interval when the component is destroyed
 	});
 </script>
 
