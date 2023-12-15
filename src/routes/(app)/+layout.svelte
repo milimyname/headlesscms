@@ -13,23 +13,35 @@
 	let drawerElement: HTMLDivElement;
 	let isAsideOpen = false;
 
-	function startDrag(event) {
-		// Check if the event target is an input or other interactive element
-		if (
-			event.target.tagName === 'INPUT' ||
-			event.target.tagName === 'TEXTAREA' ||
-			event.target.isContentEditable
-		)
+	function startDrag(event: MouseEvent | TouchEvent) {
+		let clientY: number;
+
+		if (event instanceof TouchEvent) {
+			// Handle TouchEvent
+			if (event.touches.length === 0) return;
+			clientY = event.touches[0].clientY;
+		} else if (event instanceof MouseEvent) {
+			// Handle MouseEvent
+			// Check if the event target is an input or other interactive element
+			if (event.target instanceof HTMLElement) {
+				if (
+					event.target.tagName === 'INPUT' ||
+					event.target.tagName === 'TEXTAREA' ||
+					event.target.isContentEditable
+				)
+					return;
+			}
+			clientY = event.clientY;
+		} else {
+			// Not a TouchEvent or MouseEvent
 			return;
+		}
 
-		// if ($heightSpring < 90) event.preventDefault();
-		// else return;
-
-		const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+		// Your existing logic
 		lastY = clientY;
 		lastTime = performance.now();
-		const moveEvent = event.touches ? 'touchmove' : 'mousemove';
-		const endEvent = event.touches ? 'touchend' : 'mouseup';
+		const moveEvent = event instanceof TouchEvent ? 'touchmove' : 'mousemove';
+		const endEvent = event instanceof TouchEvent ? 'touchend' : 'mouseup';
 
 		window.addEventListener(moveEvent, handleMove);
 		window.addEventListener(endEvent, endDrag);
@@ -37,8 +49,21 @@
 		drawerElement?.classList.add('touch-none');
 	}
 
-	function handleMove(event) {
-		const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+	function handleMove(event: MouseEvent | TouchEvent) {
+		let clientY: number;
+
+		if (event instanceof TouchEvent) {
+			// For TouchEvent, ensure there is at least one touch point
+			if (event.touches.length === 0) return;
+			clientY = event.touches[0].clientY;
+		} else if (event instanceof MouseEvent) {
+			// For MouseEvent, use clientY directly
+			clientY = event.clientY;
+		} else {
+			// Not a TouchEvent or MouseEvent
+			return;
+		}
+
 		const now = performance.now();
 		const deltaY = clientY - lastY;
 		const deltaTime = now - lastTime;
@@ -53,12 +78,15 @@
 	}
 
 	function endDrag() {
-		['mousemove', 'mouseup', 'touchmove', 'touchend'].forEach((event) => {
-			window.removeEventListener(event, handleMove);
-			window.removeEventListener(event, endDrag);
-		});
+		// Remove mouse event listeners
+		window.removeEventListener('mousemove', handleMove as EventListener);
+		window.removeEventListener('mouseup', endDrag as EventListener);
 
-		// Determine snap based on velocity
+		// Remove touch event listeners
+		window.removeEventListener('touchmove', handleMove as EventListener);
+		window.removeEventListener('touchend', endDrag as EventListener);
+
+		// Your existing logic for determining snap based on velocity
 		const snapThreshold = 1.5;
 
 		if (Math.abs(velocity) > snapThreshold) $heightSpring = velocity > 0 ? 0 : 100;
@@ -73,12 +101,15 @@
 
 	// The clickOutside action
 	function clickOutside(node: Node, callback: () => void) {
-		const handleClick = (event) => {
-			// Check if the clicked element or any of its parents have the class 'ready'
-			if (event.target.closest('.ready')) return;
+		const handleClick = (event: MouseEvent) => {
+			// First, check if event.target is not null and is an instance of Element
+			if (event.target instanceof Element) {
+				// Check if the clicked element or any of its parents have the class 'ready'
+				if (event.target.closest('.ready')) return;
 
-			// Check if the click was outside the node
-			if (!node.contains(event.target)) callback();
+				// Check if the click was outside the node
+				if (!node.contains(event.target)) callback();
+			}
 		};
 
 		// Add event listener to the document
